@@ -14,7 +14,7 @@ function playSound() {
 function sendMessageToTelegram() {
 	var botToken = localStorage['botToken'];
     var chatId = localStorage['chatId'];
-	var msg = encodeURI('SRT Macro: 예약 상태를 확인하세요.');
+	var msg = encodeURI('SRT Macro has been stopped. Please check your reservation status.');
 	if (botToken != undefined && chatId != undefined) {
         var url = 'https://api.telegram.org/bot' + botToken + '/sendMessage?chat_id=' + chatId + '&text=' + msg;
         
