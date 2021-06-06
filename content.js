@@ -147,7 +147,9 @@ if (document.URL.substring(0, dsturl1.length) == dsturl1) {
 						if (coachSpecials.length != 0) {
 							for (j = 0; j < coachSpecials.length; j++) {
 								name = $(coachSpecials[j]).attr('class');
-								if (name == 'btn_small btn_burgundy_dark val_m wx90') {
+								spans = $(coachSpecials[j]).children('span');
+								text = $(spans[0]).text();
+								if (name == 'btn_small btn_burgundy_dark val_m wx90' && text == '예약하기') {
 									$(coachSpecials[0])[0].click();
 									succeed = true;
 									break;
