@@ -204,7 +204,8 @@ if (document.URL.substring(0, dsturl1.length) == dsturl1) {
 					sessionStorage.removeItem('rqSeatAttCd1');
 					chrome.extension.sendMessage({type: 'playSound'}, function(data) { });
 					//특실 전용 코로나 안내 메세지 제거
-					document.querySelector('.ui-dialog-buttonset').querySelector('.ui-button').click();
+					//document.querySelector('.ui-dialog-buttonset').querySelector('.ui-button').click();
+					document.querySelector('.swal2-confirm').click();
 				} else {
 					setTimeout(function() {
 					location.reload();
