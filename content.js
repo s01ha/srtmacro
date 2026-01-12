@@ -208,11 +208,35 @@ if (document.URL.substring(0, dsturl1.length) == dsturl1) {
 					document.querySelector('.swal2-confirm').click();
 				} else {
 					setTimeout(function() {
-					location.reload();
+						// 폼 요소 선택
+						var form = document.getElementById('search-form');
+
+						// 폼이 존재하는지 확인
+						if (form) {
+							// 폼의 제출 버튼 선택
+							var submitButton = form.querySelector('input[type="submit"]');
+							
+							// 제출 버튼 클릭
+							if (submitButton) {
+								submitButton.click();
+							}
+						}
 					}, 1000);
 				}
 			} else {
-				history.go(-1);
+				// 폼 요소 선택
+				var form = document.getElementById('search-form');
+
+				// 폼이 존재하는지 확인
+				if (form) {
+					// 폼의 제출 버튼 선택
+					var submitButton = form.querySelector('input[type="submit"]');
+					
+					// 제출 버튼 클릭
+					if (submitButton) {
+						submitButton.click();
+					}
+				}
 			}
 		}
 	});
