@@ -1,38 +1,39 @@
-function playSound() {
-	if (typeof(audio) != "undefined" && audio) {
-		audio.pause();
-		document.body.removeChild(audio);
-		audio = null;
-	}
-	audio = document.createElement('audio');
-	document.body.appendChild(audio);
-	audio.autoplay = true;
-	audio.src = chrome.extension.getURL('assets/tada.mp3');
-	audio.play();
+async function ensureOffscreenDocument() {
+  const existingContexts = await chrome.runtime.getContexts({
+    contextTypes: ['OFFSCREEN_DOCUMENT']
+  });
+  if (existingContexts.length > 0) return;
+  await chrome.offscreen.createDocument({
+    url: 'offscreen.html',
+    reasons: ['AUDIO_PLAYBACK'],
+    justification: 'Play notification sound when reservation succeeds'
+  });
 }
 
-function sendMessageToTelegram() {
-	var botToken = localStorage['botToken'];
-    var chatId = localStorage['chatId'];
-	var msg = encodeURI('Macro has been stopped. Please check your reservation status.');
-	if (botToken != undefined && chatId != undefined) {
-        var url = 'https://api.telegram.org/bot' + botToken + '/sendMessage?chat_id=' + chatId + '&text=' + msg;
-        
-        var xmlhttp = new XMLHttpRequest();
-        xmlhttp.onreadystatechange=function() {
-            if (xmlhttp.readyState==4 && xmlhttp.status==200) {
-                var response = xmlhttp.responseText; //if you need to do something with the returned value
-            }
-        }
-        xmlhttp.open('GET', url, true);
-        xmlhttp.send();
-    }
+async function playSound() {
+  await ensureOffscreenDocument();
+  chrome.runtime.sendMessage({ type: 'playOffscreenSound' });
 }
 
-chrome.extension.onMessage.addListener(function(message, sender, sendResponse) {
-    if (message && message.type == 'playSound') {
-		playSound();
-		sendMessageToTelegram();
-        sendResponse(true);
+async function sendMessageToTelegram() {
+  const result = await chrome.storage.local.get(['botToken', 'chatId']);
+  var botToken = result.botToken;
+  var chatId = result.chatId;
+  var msg = encodeURI('Macro has been stopped. Please check your reservation status.');
+  if (botToken && chatId) {
+    var url = 'https://api.telegram.org/bot' + botToken + '/sendMessage?chat_id=' + chatId + '&text=' + msg;
+    try {
+      await fetch(url);
+    } catch (e) {
+      console.error('Telegram message failed:', e);
     }
+  }
+}
+
+chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
+  if (message && message.type == 'playSound') {
+    playSound().then(() => sendMessageToTelegram());
+    sendResponse(true);
+  }
+  return true;
 });

@@ -1,4 +1,13 @@
-var dsturl1 = "https://etk.srail.kr/hpg/hra/01/selectScheduleList.do?pageId=TK0101010000#none";
+// 도메인 + pageId 기반 매칭 (URL 경로가 동적으로 변경되어도 동작)
+var TARGET_DOMAINS = ["etk.srail.kr", "etk.srail.co.kr"];
+var TARGET_PAGE_ID = "TK0101011000";
+
+function isTargetPage() {
+	var hostname = location.hostname;
+	var params = new URLSearchParams(location.search);
+	var pageId = params.get('pageId');
+	return TARGET_DOMAINS.indexOf(hostname) > -1 && pageId === TARGET_PAGE_ID;
+}
 
 window.showModalDialog = window.showModalDialog || function(url, arg, opt) {
 	window.open(url, arg, opt);
@@ -51,7 +60,7 @@ function macrostop() {
 	location.reload();
 }
 
-if (document.URL.substring(0, dsturl1.length) == dsturl1) {
+if (isTargetPage()) {
 
 	$(document).ready(function() {
 
@@ -175,7 +184,7 @@ if (document.URL.substring(0, dsturl1.length) == dsturl1) {
 					sessionStorage.removeItem('psgInfoPerPrnb3');
 					sessionStorage.removeItem('locSeatAttCd1');
 					sessionStorage.removeItem('rqSeatAttCd1');
-					chrome.extension.sendMessage({type: 'playSound'}, function(data) { });
+					chrome.runtime.sendMessage({type: 'playSound'}, function(data) { });
 				} else {
 					setTimeout(function() {
 					location.reload();
