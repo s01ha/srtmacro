@@ -12,6 +12,7 @@ var PREF_FIELDS = [
 ];
 
 function isTargetPage() {
+	if (window !== window.top) return false; // iframe 내에서는 실행하지 않음
 	var hostname = location.hostname;
 	var params = new URLSearchParams(location.search);
 	var pageId = params.get('pageId');
@@ -44,6 +45,34 @@ function clearMacroSession() {
 	PREF_FIELDS.forEach(function(f) { sessionStorage.removeItem(f); });
 }
 
+// "조회하기" 버튼을 찾아서 클릭 (폼 재제출)
+function clickSearchButton() {
+	// 1) 조회하기 input[type=submit] 또는 button
+	var searchForm = document.getElementById('search-form');
+	if (searchForm) {
+		var buttons = searchForm.querySelectorAll('input[type="submit"], input[type="image"], button[type="submit"]');
+		for (var i = 0; i < buttons.length; i++) {
+			if (buttons[i].value && buttons[i].value.indexOf('조회') > -1) {
+				buttons[i].click();
+				return;
+			}
+		}
+		// 2) a 태그 중 "조회하기" 텍스트
+		var links = searchForm.querySelectorAll('a');
+		for (var i = 0; i < links.length; i++) {
+			if (links[i].textContent.trim().indexOf('조회') > -1) {
+				links[i].click();
+				return;
+			}
+		}
+		// 3) 폴백: 폼 직접 submit
+		searchForm.submit();
+		return;
+	}
+	// 4) 최종 폴백: 페이지 새로고침
+	location.reload();
+}
+
 window.showModalDialog = window.showModalDialog || function(url, arg, opt) {
 	window.open(url, arg, opt);
 };
@@ -69,13 +98,14 @@ function macrostart() {
 			sessionStorage.setItem(f, getFieldValue(f));
 		});
 
-		location.reload();
+		clickSearchButton();
 	}
 }
 
 function macrostop() {
 	alert('매크로를 중지합니다.\n조건을 변경하여 재조회하신 후 다시 시작하실 수 있습니다.');
 	clearMacroSession();
+	chrome.runtime.sendMessage({ type: 'macroStopped' }, function() {});
 	location.reload();
 }
 
@@ -112,7 +142,7 @@ if (isTargetPage()) {
 	var coachSelected = safeParse('coachSelected');
 	var firstSelected = safeParse('firstSelected');
 
-	// 매크로 시작/중지 버튼 추가
+	// 매크로 시작/중지 버튼 추가 (검색 결과 페이지에만 존재)
 	var toolbar = document.getElementById('search_top_tag');
 	if (toolbar) {
 		var btnLink = document.createElement('a');
@@ -133,8 +163,6 @@ if (isTargetPage()) {
 			toolbar.appendChild(btnLink);
 			btnLink.addEventListener('click', macrostart, false);
 		}
-	} else {
-		console.warn('[SRT Macro] 툴바 요소(#search_top_tag)를 찾을 수 없습니다.');
 	}
 
 	// 스타일 삽입
@@ -168,6 +196,8 @@ if (isTargetPage()) {
 
 	// 매크로 실행 로직
 	if (sessionStorage.getItem('macro') === 'true') {
+		// 백그라운드에 heartbeat 전송 → 워치독 타이머 리셋
+		chrome.runtime.sendMessage({ type: 'macroHeartbeat' }, function() {});
 
 		// 사용자 설정 복원
 		PREF_FIELDS.forEach(function(f) {
@@ -209,7 +239,7 @@ if (isTargetPage()) {
 				chrome.runtime.sendMessage({ type: 'playSound' }, function() {});
 			} else {
 				setTimeout(function() {
-					location.reload();
+					clickSearchButton();
 				}, 1000);
 			}
 		} else {

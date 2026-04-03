@@ -4,6 +4,7 @@
   "description": "SRT 자동 예약 매크로",
   "version": "2.0.0",
   "permissions": [
+    "alarms",
     "offscreen",
     "storage"
   ],
