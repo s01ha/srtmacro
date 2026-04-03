@@ -16,7 +16,7 @@
   },
   "content_scripts": [{
     "all_frames": true,
-    "js": ["jquery-1.11.3.min.js", "content.js"],
+    "js": ["content.js"],
     "matches": [
       "https://etk.srail.co.kr/*",
       "https://etk.srail.kr/*"
